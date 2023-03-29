@@ -1,0 +1,55 @@
+[build-system]
+requires = ["flit_core >=3.4,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "kedro-kaggle-dataset"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Juan Luis Cano Rodríguez", email = "juan_luis_cano@mckinsey.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dynamic = ["version", "description"]
+
+[tool.flit.module]
+name = "kedro_kaggle_dataset"
+
+[project.urls]
+source = "https://github.com/astrojuanlu/kedro-kaggle-dataset"
+tracker = "https://github.com/astrojuanlu/kedro-kaggle-dataset/issues"
+documentation = "https://kedro-kaggle-dataset.readthedocs.io"
+
+[project.optional-dependencies]
+test = [
+    "mypy",
+    "hypothesis",
+    "pytest",
+    "pytest-cov",
+]
+doc = [
+    "furo",
+    "myst-parser",
+    "sphinx~=4.3.0",
+    "sphinx-copybutton",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
