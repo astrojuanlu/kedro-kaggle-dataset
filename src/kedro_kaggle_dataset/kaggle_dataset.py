@@ -10,7 +10,7 @@ from kedro.io import AbstractDataSet
 @dataclass
 class KaggleBundle:
     dataset_or_competition: str
-    members: t.List[str]
+    members: t.Dict[str, BytesIO]
     is_competition: bool
     single_file: bool
 

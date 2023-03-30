@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .kaggle_dataset import KaggleDataSet
+from .kaggle_dataset import KaggleDataSet, KaggleBundle
 
 __version__ = "0.1"
 
-__all__ = ["KaggleDataSet"]
+__all__ = ["KaggleDataSet", "KaggleBundle"]
