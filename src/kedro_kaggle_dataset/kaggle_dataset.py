@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 import typing as t
 from zipfile import ZipFile
@@ -51,33 +52,16 @@ class KaggleDataSet(AbstractDataSet[KaggleBundle, KaggleBundle]):
 
         return members
 
-    def __load_single_file(self) -> KaggleBundle:
-        members = self.__list_members()
-        if self._file_name not in members:
-            raise ValueError(f"File not found, available files are {members}")
+    def __unzip_and_delete(self, zip_path: str, members_list: t.List[str]) -> None:
+        with ZipFile(str(zip_path)) as zip:
+            zip.extractall(str(self._directory), members=members_list)
 
-        return KaggleBundle(
-            self._dataset_or_competition, [self._file_name], self._is_competition, True
-        )
+        zip_path.unlink()
 
-    def __load_whole_dataset(self) -> KaggleBundle:
-        members = self.__list_members()
-        return KaggleBundle(
-            self._dataset_or_competition, members, self._is_competition, False
-        )
-
-    def _load(self) -> KaggleBundle:
-        if self._file_name is None:
-            result = self.__load_whole_dataset()
-        else:
-            result = self.__load_single_file()
-
-        return result
-
-    def __save_single_file(self, data: KaggleBundle) -> None:
-        if data.is_competition:
+    def __download_single_file(self, members_list) -> None:
+        if self._is_competition:
             self._api.competition_download_file(
-                data.dataset_or_competition,
+                self._dataset_or_competition,
                 self._file_name,
                 path=str(self._directory),
                 force=True,
@@ -92,44 +76,57 @@ class KaggleDataSet(AbstractDataSet[KaggleBundle, KaggleBundle]):
                 quiet=False,
             )
 
-            # Extract and remove zip
-            # TODO: Refactor
-            zip_path = self._directory / (self._file_name + ".zip")
-            with ZipFile(str(zip_path)) as zip:
-                zip.extractall(str(self._directory), members=data.members)
+            self.__unzip_and_delete(
+                self._directory / (self._file_name + ".zip"), members_list
+            )
 
-            zip_path.unlink()
-
-    def __save_whole_dataset(self, data: KaggleBundle) -> None:
+    def __download_whole_dataset(self, members_list: t.List[str]) -> None:
         if self._is_competition:
             self._api.competition_download_files(
-                data.dataset_or_competition,
+                self._dataset_or_competition,
                 path=str(self._directory),
                 force=True,
                 quiet=False,
             )
 
             # Extract and remove zip
-            zip_path = self._directory / (data.dataset_or_competition + ".zip")
-            with ZipFile(str(zip_path)) as zip:
-                zip.extractall(str(self._directory), members=data.members)
-
-            zip_path.unlink()
+            self.__unzip_and_delete(
+                self._directory / (self._dataset_or_competition + ".zip"), members_list
+            )
         else:
             # Always unzip
             self._api.dataset_download_files(
-                data.dataset_or_competition,
+                self._dataset_or_competition,
                 path=str(self._directory),
                 force=True,
                 quiet=False,
                 unzip=True,
             )
 
-    def _save(self, data: KaggleBundle) -> None:
-        if data.single_file:
-            self.__save_single_file(data)
+    def _load(self) -> KaggleBundle:
+        if self._file_name is None:
+            members_list = self.__list_members()
+            self.__download_whole_dataset(members_list)
         else:
-            self.__save_whole_dataset(data)
+            members_list = self.__list_members()
+            if self._file_name not in members_list:
+                raise ValueError(f"File not found, available files are {members_list}")
+            self.__download_single_file(members_list)
+
+        members = {}
+        for member_filename in members_list:
+            with open(self._directory / member_filename, "rb") as fh:
+                members[member_filename] = BytesIO(fh.read())
+
+        return KaggleBundle(
+            self._dataset_or_competition,
+            members,
+            self._is_competition,
+            self._file_name is not None,
+        )
+
+    def _save(self, _) -> None:
+        raise NotImplementedError("Cannot save back to Kaggle")
 
     def _describe(self) -> t.Dict[str, t.Any]:
         ...
