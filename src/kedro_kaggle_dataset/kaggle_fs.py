@@ -71,13 +71,12 @@ def _filter_by_path(info_dict, segments):
     return info_dict
 
 
-class KaggleFileSystem(AbstractFileSystem):
-    def __init__(self, username, password, is_competition=False, **kwargs):
+class KaggleCompetitionFileSystem(AbstractFileSystem):
+    def __init__(self, username, password, **kwargs):
         super().__init__(**kwargs)
 
         self._username = username
         self._password = password
-        self._is_competition = is_competition
 
         self._api = None
 
@@ -111,18 +110,10 @@ class KaggleFileSystem(AbstractFileSystem):
     def _list_all_files(self, path):
         path = self._strip_protocol(path)
 
-        if self._is_competition:
-            competition_name, *rest = path.split("/", maxsplit=2)
-            if not competition_name:
-                raise ValueError("Must specify competition name")
-            result_files = self.api.competition_list_files(competition=competition_name)
-        else:
-            dataset_owner, dataset_name, *rest = path.split("/", maxsplit=3)
-            if not dataset_name:
-                raise ValueError("Must specify dataset name")
-            result_files = self.api.dataset_list_files(
-                f"{dataset_owner}/{dataset_name}"
-            ).files
+        competition_name, *rest = path.split("/", maxsplit=2)
+        if not competition_name:
+            raise ValueError("Must specify competition name")
+        result_files = self.api.competition_list_files(competition=competition_name)
 
         return result_files, rest
 
