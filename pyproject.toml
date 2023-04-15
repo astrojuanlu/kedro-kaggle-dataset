@@ -23,7 +23,9 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
+    "fsspec",
     "kaggle",
+    "kedro",
 ]
 dynamic = ["version", "description"]
 
