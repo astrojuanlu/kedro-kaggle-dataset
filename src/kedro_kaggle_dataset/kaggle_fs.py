@@ -88,7 +88,7 @@ class KaggleCompetitionFileSystem(AbstractFileSystem):
         try:
             # Trigger possibly failed authentication
             # because kaggle.__init__ has an unavoidable .authenticate() call in it
-            import kaggle
+            import kaggle  # noqa
         except Exception:
             pass
 
