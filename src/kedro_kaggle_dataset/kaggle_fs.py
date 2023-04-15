@@ -71,6 +71,13 @@ def _filter_by_path(info_dict, segments):
     return info_dict
 
 
+def _prepend_container_name(info_dict, container_name):
+    info_dict = info_dict.copy()
+    for member in info_dict:
+        member["name"] = f"{container_name}/{member['name']}"
+    return info_dict
+
+
 class KaggleCompetitionFileSystem(AbstractFileSystem):
     def __init__(self, username, password, **kwargs):
         super().__init__(**kwargs)
@@ -115,16 +122,14 @@ class KaggleCompetitionFileSystem(AbstractFileSystem):
             raise ValueError("Must specify competition name")
         result_files = self.api.competition_list_files(competition=competition_name)
 
-        return result_files, rest
+        return result_files, competition_name, rest
 
     # Might use:
     # def cat_file(self, path, start=None, end=None, **kwargs) -> str:
     # def exists(self, path, **kwargs) -> bool:
     # def get_file(self, rpath, lpath, callback=_DEFAULT_CALLBACK, outfile=None, **kwargs):
     # def find(self, path, maxdepth=None, withdirs=False, detail=False, **kwargs) -> t.Union[t.List[str], t.Dict[str, t.Any]]:
-    # FIXME: info of a file turns it into directory
     # def info(self, path):
-    # FIXME: size of a file returns zero
     # def size(self, path):
 
     # FIXME: How should I download the whole bundle with this scheme?
@@ -212,7 +217,7 @@ class KaggleCompetitionFileSystem(AbstractFileSystem):
         List of strings if detail is False, or list of directory information
         dicts if detail is True.
         """
-        result_files, rest = self._list_all_files(path)
+        result_files, competition_name, rest = self._list_all_files(path)
 
         all_members = _augment_with_directories(
             [
@@ -225,6 +230,7 @@ class KaggleCompetitionFileSystem(AbstractFileSystem):
         if not info_dict:
             raise ValueError("Path not found")
 
+        info_dict = _prepend_container_name(info_dict, competition_name)
         if detail:
             return info_dict
         else:
